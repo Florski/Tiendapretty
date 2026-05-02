@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pretty - Tienda Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-pink-50">
+    <!-- Header -->
+    <header class="bg-pink-100 shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold text-purple-600">
+                        <i class="fas fa-store"></i> Pretty
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <button onclick="showStore()" class="text-gray-700 hover:text-purple-600 transition">
+                        <i class="fas fa-shopping-bag"></i> Tienda
+                    </button>
+                    <button onclick="showAdmin()" class="text-gray-700 hover:text-purple-600 transition">
+                        <i class="fas fa-cog"></i> Administrador
+                    </button>
+                    <button onclick="showCart()" class="text-gray-700 hover:text-purple-600 transition">
+                        <i class="fas fa-shopping-cart"></i> Carrito
+                        <span id="cartCount" class="absolute -top-2 -right-2 bg-pink-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">0</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Store View -->
+        <div id="storeView" class="block">
+            <!-- Categories Section -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold mb-6">Categorías</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <div onclick="filterByCategory('all')" class="cursor-pointer group">
+                        <div class="bg-pink-100 rounded-lg p-6 text-center hover:bg-pink-200 transition">
+                            <i class="fas fa-th-large text-3xl text-purple-600 mb-3"></i>
+                            <h3 class="font-semibold text-purple-800">Todos</h3>
+                            <p class="text-sm text-purple-600">Ver todos</p>
+                        </div>
+                    </div>
+                    <div onclick="filterByCategory('electronics')" class="cursor-pointer group">
+                        <div class="bg-purple-100 rounded-lg p-6 text-center hover:bg-purple-200 transition">
+                            <i class="fas fa-laptop text-3xl text-purple-600 mb-3"></i>
+                            <h3 class="font-semibold text-purple-800">Electrónica</h3>
+                            <p class="text-sm text-purple-600">Tecnología</p>
+                        </div>
+                    </div>
+                    <div onclick="filterByCategory('clothing')" class="cursor-pointer group">
+                        <div class="bg-pink-100 rounded-lg p-6 text-center hover:bg-pink-200 transition">
+                            <i class="fas fa-tshirt text-3xl text-purple-600 mb-3"></i>
+                            <h3 class="font-semibold text-purple-800">Ropa</h3>
+                            <p class="text-sm text-purple-600">Moda</p>
+                        </div>
+                    </div>
+                    <div onclick="filterByCategory('home')" class="cursor-pointer group">
+                        <div class="bg-purple-100 rounded-lg p-6 text-center hover:bg-purple-200 transition">
+                            <i class="fas fa-home text-3xl text-purple-600 mb-3"></i>
+                            <h3 class="font-semibold text-purple-800">Hogar</h3>
+                            <p class="text-sm text-purple-600">Decoración</p>
+                        </div>
+                    </div>
+                    <div onclick="filterByCategory('books')" class="cursor-pointer group">
+                        <div class="bg-pink-100 rounded-lg p-6 text-center hover:bg-pink-200 transition">
+                            <i class="fas fa-book text-3xl text-purple-600 mb-3"></i>
+                            <h3 class="font-semibold text-purple-800">Libros</h3>
+                            <p class="text-sm text-purple-600">Lectura</p>
+                        </div>
+                    </div>
+                    <div onclick="filterByCategory('other')" class="cursor-pointer group">
+                        <div class="bg-purple-100 rounded-lg p-6 text-center hover:bg-purple-200 transition">
+                            <i class="fas fa-box text-3xl text-purple-600 mb-3"></i>
+                            <h3 class="font-semibold text-purple-800">Otros</h3>
+                            <p class="text-sm text-purple-600">Varios</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured Products -->
+            <div class="mb-12">
+                <h2 class="text-2xl font-bold mb-6">Productos Destacados</h2>
+                <div id="featuredProducts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Products will be loaded here -->
+                </div>
+            </div>
+
+            <!-- All Products -->
+            <div>
+                <h2 class="text-2xl font-bold mb-6">Todos los Productos</h2>
+                <div id="allProducts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Products will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin View -->
+        <div id="adminView" class="hidden">
+            <div class="bg-purple-50 rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold mb-6">Panel de Administración</h2>
+                
+                <!-- Add Product Form -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-4">Agregar Nuevo Producto</h3>
+                    <form id="productForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Producto</label>
+                            <input type="text" id="productName" required class="w-full px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
+                            <select id="productCategory" required class="w-full px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                                <option value="">Seleccionar categoría</option>
+                                <option value="electronics">Electrónica</option>
+                                <option value="clothing">Ropa</option>
+                                <option value="home">Hogar</option>
+                                <option value="books">Libros</option>
+                                <option value="other">Otros</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Precio</label>
+                            <input type="number" id="productPrice" step="0.01" min="0" required class="w-full px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Stock</label>
+                            <input type="number" id="productStock" min="0" required class="w-full px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                            <textarea id="productDescription" rows="3" required class="w-full px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">URL de Imagen</label>
+                            <input type="url" id="productImage" class="w-full px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="productFeatured" class="mr-2">
+                                <span class="text-sm font-medium text-gray-700">Producto Destacado</span>
+                            </label>
+                        </div>
+                        
+                        <!-- Colors Section -->
+                        <div class="md:col-span-2">
+                            <h4 class="text-lg font-semibold mb-3">Colores Disponibles</h4>
+                            <div id="colorsContainer" class="space-y-2 mb-4">
+                                <div class="flex gap-2 items-center">
+                                    <input type="text" placeholder="Nombre del color" class="color-name flex-1 px-3 py-2 border border-purple-200 rounded-lg">
+                                    <input type="color" class="color-code w-16 h-10 border border-purple-200 rounded">
+                                    <input type="number" placeholder="Stock" class="color-stock w-20 px-3 py-2 border border-purple-200 rounded-lg">
+                                    <button type="button" onclick="addColorField()" class="bg-purple-400 text-white px-3 py-2 rounded hover:bg-purple-500">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Sizes Section (for clothing) -->
+                        <div class="md:col-span-2" id="sizesSection">
+                            <h4 class="text-lg font-semibold mb-3">Tallas Disponibles</h4>
+                            <div id="sizesContainer" class="space-y-2 mb-4">
+                                <div class="flex gap-2 items-center">
+                                    <input type="text" placeholder="Talla (XS, S, M, L, XL)" class="size-name flex-1 px-3 py-2 border border-purple-200 rounded-lg">
+                                    <input type="number" placeholder="Stock" class="size-stock w-20 px-3 py-2 border border-purple-200 rounded-lg">
+                                    <button type="button" onclick="addSizeField()" class="bg-purple-400 text-white px-3 py-2 rounded hover:bg-purple-500">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Shipping Options -->
+                        <div class="md:col-span-2">
+                            <h4 class="text-lg font-semibold mb-3">Opciones de Envío</h4>
+                            <div id="shippingContainer" class="space-y-2 mb-4">
+                                <div class="grid grid-cols-4 gap-2 items-center">
+                                    <select class="shipping-type px-3 py-2 border border-purple-200 rounded-lg">
+                                        <option value="standard">Estándar</option>
+                                        <option value="express">Express</option>
+                                        <option value="overnight">Overnight</option>
+                                    </select>
+                                    <input type="number" placeholder="Días" class="shipping-days px-3 py-2 border border-purple-200 rounded-lg">
+                                    <input type="number" placeholder="Precio" step="0.01" class="shipping-price px-3 py-2 border border-purple-200 rounded-lg">
+                                    <button type="button" onclick="addShippingField()" class="bg-purple-400 text-white px-3 py-2 rounded hover:bg-purple-500">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <button type="submit" class="bg-purple-400 text-white px-6 py-2 rounded-lg hover:bg-purple-500 transition">
+                                <i class="fas fa-plus"></i> Agregar Producto
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Products Management -->
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Gestionar Productos</h3>
+                    <div id="adminProducts" class="overflow-x-auto">
+                        <!-- Products table will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Cart Modal -->
+    <div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-purple-50 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-purple-800">
+                    <i class="fas fa-shopping-cart"></i> Tu Carrito
+                </h3>
+                <button onclick="closeCart()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div id="cartItems" class="mb-6">
+                <!-- Cart items will be loaded here -->
+            </div>
+            
+            <div class="border-t pt-4">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-xl font-semibold">Total:</span>
+                    <span id="cartTotal" class="text-2xl font-bold text-purple-600">$0.00</span>
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="clearCart()" class="flex-1 bg-pink-400 text-white px-4 py-2 rounded-lg hover:bg-pink-500 transition">
+                        <i class="fas fa-trash"></i> Vaciar Carrito
+                    </button>
+                    <button onclick="checkout()" class="flex-1 bg-purple-400 text-white px-4 py-2 rounded-lg hover:bg-purple-500 transition">
+                        <i class="fas fa-credit-card"></i> Proceder al Pago
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-purple-50 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modalTitle" class="text-xl font-bold"></h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
