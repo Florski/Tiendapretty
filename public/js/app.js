@@ -1,9 +1,18 @@
 let products = [];
 let currentCategory = 'all';
 let cart = [];
+let isAdminAuthenticated = false;
+const categoryImagesStorageKey = 'prettyCategoryImages';
+const defaultCategoryImages = {
+    beauty: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1400&q=80',
+    clothing: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1400&q=80',
+    other: 'https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&w=1400&q=80'
+};
+let categoryImages = { ...defaultCategoryImages };
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
+    loadCategoryImages();
     loadProducts();
     updateCartCount(); // Initialize cart count from localStorage
     
@@ -12,6 +21,32 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         addProduct();
     });
+
+    const adminLoginForm = document.getElementById('adminLoginForm');
+    if (adminLoginForm) {
+        adminLoginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await loginAdmin();
+        });
+    }
+
+    const categoryImagesForm = document.getElementById('categoryImagesForm');
+    if (categoryImagesForm) {
+        categoryImagesForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveCategoryImages();
+        });
+    }
+
+    const productCategory = document.getElementById('productCategory');
+    if (productCategory) {
+        productCategory.addEventListener('change', function() {
+            toggleSizesSection(this.value);
+        });
+    }
+
+    fillCategoryImageInputs();
+    toggleSizesSection(document.getElementById('productCategory')?.value || '');
 });
 
 // Load products from API
@@ -58,6 +93,8 @@ function displayProducts() {
     } else {
         categoryTitle.textContent = 'Todos los Productos';
     }
+
+    updateCategoryHero();
 }
 
 // Create product card HTML
@@ -150,16 +187,17 @@ function displayAdminProducts() {
 
 // Add new product
 async function addProduct() {
+    const selectedCategory = document.getElementById('productCategory').value;
     const product = {
         name: document.getElementById('productName').value,
         description: document.getElementById('productDescription').value,
         price: parseFloat(document.getElementById('productPrice').value),
-        category: document.getElementById('productCategory').value,
+        category: selectedCategory,
         stock: parseInt(document.getElementById('productStock').value),
         imageUrl: document.getElementById('productImage').value,
         featured: document.getElementById('productFeatured').checked,
         colors: getColorsData(),
-        sizes: getSizesData(),
+        sizes: selectedCategory === 'clothing' ? getSizesData() : [],
         shippingOptions: getShippingData()
     };
     
@@ -303,7 +341,7 @@ function resetDynamicFields() {
             </button>
         </div>
     `;
-    
+
     document.getElementById('sizesContainer').innerHTML = `
         <div class="flex gap-2 items-center">
             <input type="text" placeholder="Talla (XS, S, M, L, XL)" class="size-name flex-1 px-3 py-2 border border-purple-200 rounded-lg">
@@ -344,6 +382,7 @@ async function editProduct(id) {
         document.getElementById('productStock').value = product.stock;
         document.getElementById('productImage').value = product.imageUrl || '';
         document.getElementById('productFeatured').checked = product.featured;
+        toggleSizesSection(product.category);
         
         // Change form to update mode
         const form = document.getElementById('productForm');
@@ -368,14 +407,16 @@ async function editProduct(id) {
 
 // Update product
 async function updateProduct(id) {
+    const selectedCategory = document.getElementById('productCategory').value;
     const product = {
         name: document.getElementById('productName').value,
         description: document.getElementById('productDescription').value,
         price: parseFloat(document.getElementById('productPrice').value),
-        category: document.getElementById('productCategory').value,
+        category: selectedCategory,
         stock: parseInt(document.getElementById('productStock').value),
         imageUrl: document.getElementById('productImage').value,
-        featured: document.getElementById('productFeatured').checked
+        featured: document.getElementById('productFeatured').checked,
+        sizes: selectedCategory === 'clothing' ? getSizesData() : []
     };
     
     try {
@@ -625,8 +666,44 @@ function showStore() {
 }
 
 function showAdmin() {
-    document.getElementById('storeView').classList.add('hidden');
-    document.getElementById('adminView').classList.remove('hidden');
+    if (isAdminAuthenticated) {
+        document.getElementById('storeView').classList.add('hidden');
+        document.getElementById('adminView').classList.remove('hidden');
+        return;
+    }
+
+    document.getElementById('adminLoginModal').classList.remove('hidden');
+}
+
+function closeAdminLogin() {
+    document.getElementById('adminLoginModal').classList.add('hidden');
+}
+
+async function loginAdmin() {
+    const username = document.getElementById('adminUsername').value.trim();
+    const password = document.getElementById('adminPassword').value;
+
+    try {
+        const response = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        if (!response.ok) {
+            showError('Usuario o contraseña incorrectos');
+            return;
+        }
+
+        isAdminAuthenticated = true;
+        closeAdminLogin();
+        showSuccess('Acceso de administrador concedido');
+        document.getElementById('storeView').classList.add('hidden');
+        document.getElementById('adminView').classList.remove('hidden');
+    } catch (error) {
+        console.error('Error admin login:', error);
+        showError('No se pudo validar el acceso');
+    }
 }
 
 // Close modal
@@ -647,18 +724,85 @@ function resetForm() {
     submitBtn.innerHTML = '<i class="fas fa-plus"></i> Agregar Producto';
     submitBtn.classList.remove('bg-pink-400', 'hover:bg-pink-500');
     submitBtn.classList.add('bg-purple-400', 'hover:bg-purple-500');
+    toggleSizesSection('');
+    resetDynamicFields();
 }
 
 // Utility functions
 function getCategoryName(category) {
     const categories = {
-        'electronics': 'Electrónica',
+        'beauty': 'Belleza',
         'clothing': 'Ropa',
-        'home': 'Hogar',
-        'books': 'Libros',
         'other': 'Otros'
     };
     return categories[category] || category;
+}
+
+function toggleSizesSection(category) {
+    const sizesSection = document.getElementById('sizesSection');
+    if (!sizesSection) return;
+
+    if (category === 'clothing') {
+        sizesSection.classList.remove('hidden');
+    } else {
+        sizesSection.classList.add('hidden');
+    }
+}
+
+function loadCategoryImages() {
+    try {
+        const saved = localStorage.getItem(categoryImagesStorageKey);
+        if (!saved) return;
+        categoryImages = { ...defaultCategoryImages, ...JSON.parse(saved) };
+    } catch (error) {
+        console.error('Error loading category images:', error);
+        categoryImages = { ...defaultCategoryImages };
+    }
+}
+
+function fillCategoryImageInputs() {
+    const beautyInput = document.getElementById('beautyCategoryImage');
+    const clothingInput = document.getElementById('clothingCategoryImage');
+    const otherInput = document.getElementById('otherCategoryImage');
+
+    if (!beautyInput || !clothingInput || !otherInput) return;
+
+    beautyInput.value = categoryImages.beauty || '';
+    clothingInput.value = categoryImages.clothing || '';
+    otherInput.value = categoryImages.other || '';
+}
+
+function saveCategoryImages() {
+    const beauty = document.getElementById('beautyCategoryImage').value.trim();
+    const clothing = document.getElementById('clothingCategoryImage').value.trim();
+    const other = document.getElementById('otherCategoryImage').value.trim();
+
+    categoryImages = {
+        beauty: beauty || defaultCategoryImages.beauty,
+        clothing: clothing || defaultCategoryImages.clothing,
+        other: other || defaultCategoryImages.other
+    };
+
+    localStorage.setItem(categoryImagesStorageKey, JSON.stringify(categoryImages));
+    updateCategoryHero();
+    showSuccess('Imágenes de categorías actualizadas');
+}
+
+function updateCategoryHero() {
+    const hero = document.getElementById('categoryHero');
+    const heroImage = document.getElementById('categoryHeroImage');
+    const heroTitle = document.getElementById('categoryHeroTitle');
+
+    if (!hero || !heroImage || !heroTitle) return;
+
+    if (currentCategory === 'all' || !categoryImages[currentCategory]) {
+        hero.classList.add('hidden');
+        return;
+    }
+
+    hero.classList.remove('hidden');
+    heroTitle.textContent = getCategoryName(currentCategory);
+    heroImage.style.backgroundImage = `url('${categoryImages[currentCategory]}')`;
 }
 
 function showSuccess(message) {

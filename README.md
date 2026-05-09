@@ -81,6 +81,28 @@ npm run dev
 - `?category=electronics` - Filtrar por categoría
 - `?featured=true` - Obtener solo productos destacados
 
+## Deploy en Render (1 servicio, 1 puerto)
+
+Este proyecto corre como un solo servicio web en Render:
+
+- Frontend estático servido por Express desde `public/`
+- Backend API servido por el mismo proceso Node.js (`/api/*`)
+- Un único puerto, inyectado por Render con `process.env.PORT`
+
+Configura el servicio en Render con:
+
+- `buildCommand`: `npm install`
+- `startCommand`: `npm start`
+- `Root Directory`: vacío (raíz del repo)
+
+Variables requeridas en Render:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `ADMIN_USER`
+- `ADMIN_PASSWORD`
+- `NODE_ENV=production`
+
 ## Estructura del Proyecto
 
 ```
